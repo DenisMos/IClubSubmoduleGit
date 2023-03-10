@@ -1,2 +1,2 @@
-copy Gituser.exe ..\..\..\
-copy GitView.exe ..\..\..\
+copy Gituser.exe ..\
+copy GitView.exe ..\
