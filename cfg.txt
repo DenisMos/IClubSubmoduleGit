@@ -1,1 +1,2 @@
 https://github.com/DenisMos/IClubRepositoryForUnity.git
+https://github.com/DenisMos/IClubGroup2Repository.git
