@@ -8,6 +8,10 @@ namespace GitView.Git
 {
 	public static class GitAPI
 	{
+		public static string Untracked => $"ls-files --others";
+
+		public static string Unstage => $"diff --name-only";
+
 		public static string Clone(string distantion) => $"clone {distantion}";
 
 		public static string Fetch() => "fetch";

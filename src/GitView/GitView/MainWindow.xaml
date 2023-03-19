@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GitView"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="ViewGit - 0.0.2v" Height="450" Width="800">
 
     <Window.Background>
         <ImageBrush ImageSource="{Binding Image}"
@@ -28,7 +28,15 @@
             <ColumnDefinition Width="554*"/>
             <ColumnDefinition Width="115*"/>
         </Grid.ColumnDefinitions>
-        <ListBox ItemsSource="{Binding Items}" Grid.RowSpan="1" Grid.Row="1"/>
+        <ListBox ItemsSource="{Binding Items}" Grid.RowSpan="1" Grid.Row="1">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <TextBlock Text="{Binding Text}" Foreground="{Binding Color}" ToolTip="{Binding Text}" MouseDown="TextBlock_MouseDown"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
         <ListBox Grid.Column="0" Grid.ColumnSpan="3" Background="#FFFFFFFf" ItemsSource="{Binding Log.Rows}" Margin="0,4,0,0" Grid.Row="2">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -43,7 +51,7 @@
             <TextBox Name="_pass" Text="Пароль"/>
             <TextBox Name="_url" Text="URL GIT"/>
             <Button Name="C" Content="Подключиться" Click="Connect"/>
-            <Button Name="S" Content="Синхронизация" Click="Button_Click_1"/>
+            <Button Name="S" Content="Синхронизация" Click="Sync"/>
             <Button Name="Clear" Content="Очистка" Click="Button_Click_2"/>
             <Button Name="Send" Content="Отправка" Click="Push"/>
         </StackPanel>

@@ -10,8 +10,10 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Policy;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using static GitView.Log.LogCollection;
 
 namespace GitView
 {
@@ -19,18 +21,18 @@ namespace GitView
 	{
 		public BitmapImage Image { get; private set; }
 
-		public ObservableCollection<string> Items { get; }
+		public ObservableCollection<LogElement> Items { get; }
 
 		public LogCollection Log { get; } = new LogCollection();
 
 		public MainWindowsViewModel() 
 		{
+			
 			var wathc = Stopwatch.StartNew();
 			wathc.Start();
 
-			Items = new ObservableCollection<string>()
+			Items = new ObservableCollection<LogElement>()
 			{ 
-				"Data"
 			};
 
 			wathc.Stop();
@@ -40,33 +42,35 @@ namespace GitView
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		public void Push(string name)
+		public async Task Push(string name)
 		{ 
 			var handler = new WrapperGit();
 			handler.SetDirect(Environment.CurrentDirectory + "\\" + "IClubRepositoryForUnity");
 
-			handler.Start(GitAPI.CommitAdd());
+			await handler.StartAsync(GitAPI.CommitAdd());
 
 			Log.Message(handler.Start(GitAPI.Commit()));
 
-			var message = handler.Start(GitAPI.Push(name));
-			if(handler.IsExeption)
+			var message = await handler.StartAsync(GitAPI.Push(name));
+			if(message.Contains("->"))
 			{
-				Log.MessageError(message);
+				Log.MessageCompleted($"Ветка '{name}' обновлена");
 			}
 			else
 			{
-				Log.MessageCompleted(message);
+				Log.MessageError(message);
 			}
 		}
 
-		public bool Connect(string name, string pass, string url)
+		public async Task<bool> Connect(string name, string pass, string url)
 		{
 			Log.MessageCompleted($"Подключение к {url}");
 
 			var handler = new WrapperGit();
-			handler.Start(GitAPI.Clone(url));
+
 			Log.Message($"Клонирование репозитория");
+			await handler.StartAsync(GitAPI.Clone(url));
+
 			var urlw = System.IO.Path.GetFileNameWithoutExtension(url);
 
 			handler.SetDirect(Environment.CurrentDirectory + "\\" + urlw);
@@ -75,12 +79,11 @@ namespace GitView
 			{
 				Log.Message($"Обновление ветки");
 
-				handler.Start(GitAPI.Fetch());
-				handler.Start();
+				await handler.StartAsync(GitAPI.Fetch());
 			}
 
-			handler.SetArgs(GitAPI.CheckoutRemout(name));
-			Log.Message(handler.Start());
+			var responceCheck = await handler.StartAsync(GitAPI.CheckoutRemout(name));
+			Log.Message(responceCheck);
 
 			if(!handler.IsExeption)
 			{
@@ -88,16 +91,13 @@ namespace GitView
 				Log.Message(handler.Start());
 
 				if(handler.IsExeption) {
-					handler.SetArgs($"checkout {name}");
-					Log.Message(handler.Start());
-
-					handler.Start("pull");
+					Log.Message(await handler.StartAsync($"checkout {name}"));
+					await handler.StartAsync("pull");
 				}
 			}
 			else
 			{ 
-				handler.SetArgs(GitAPI.CheckoutLocal(name));
-				var log = handler.Start();
+				var log = await handler.StartAsync(GitAPI.CheckoutLocal(name));
 
 				if(handler.IsExeption)
 				{
@@ -106,7 +106,7 @@ namespace GitView
 				}
 				else
 				{ 
-					handler.Start("pull");
+					await handler.StartAsync("pull");
 					Log.MessageCompleted("Подключение установлено");
 				}
 			}

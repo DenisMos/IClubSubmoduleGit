@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace GitView.Git
 {
@@ -30,10 +31,21 @@ namespace GitView.Git
 			StartInfo.WorkingDirectory = path;
 		}
 
+		public async Task<string> StartAsync(string command)
+		{
+			SetArgs(command);
+			return await Task.Run(() => Start(command));
+		}
+
 		public string Start(string command)
 		{
 			SetArgs(command);
 			return Start();
+		}
+
+		public async Task StartAsync()
+		{
+			await Task.Run(() => Start());
 		}
 
 		public void SetArgs(string args)
@@ -72,6 +84,11 @@ namespace GitView.Git
 		{
 			Process.Close();
 			Process.Dispose();
+		}
+
+		internal Task StartAsync(object diff)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }
