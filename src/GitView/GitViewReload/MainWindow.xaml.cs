@@ -52,12 +52,16 @@ namespace GitView
 			menuItem1.Text = "Синхронизировать";
 			var menuItem2 = new System.Windows.Forms.MenuItem();
 			menuItem2.Text = "Отправить";
+			var menuItem4 = new System.Windows.Forms.MenuItem();
+			menuItem4.Text = "Визуализация";
 			var menuItem3 = new System.Windows.Forms.MenuItem();
 			menuItem3.Text = "Выйти";
 			contextMenu.MenuItems.Add(menuItem1);
 			contextMenu.MenuItems.Add(menuItem2);
+			contextMenu.MenuItems.Add(menuItem4);
 			contextMenu.MenuItems.Add(menuItem3);
 
+			menuItem4.Click += OnMenu4Click;
 			menuItem3.Click += OnMenu3Click;
 			menuItem2.Click += OnMenu2Click;
 			menuItem1.Click += OnMenu1Click;
@@ -88,6 +92,11 @@ namespace GitView
 			_timer = new System.Threading.Timer(OnTimer, null, 0, 30000);
 
 			Send.IsEnabled = false;
+		}
+
+		private void OnMenu4Click(object sender, EventArgs e)
+		{
+			Vizualization(sender, null);
 		}
 
 		private void OnMenu1Click(object sender, EventArgs e)
@@ -122,6 +131,15 @@ namespace GitView
 			}
 		}
 
+		private void Vizualization(object sender, RoutedEventArgs e)
+		{
+			var wrap = new WrapperGit();
+			var url = System.IO.Path.GetFileNameWithoutExtension(_url.Text);
+			wrap.SetDirect(Environment.CurrentDirectory + "\\" + url);
+
+			wrap.Start("show --pretty=\"\" --name-only head", "gitk");
+		}
+
 		private async void Connect(object sender, RoutedEventArgs e)
 		{
 			try
@@ -148,7 +166,7 @@ namespace GitView
 
 		private async void Sync(object sender, RoutedEventArgs e)
 		{
-			
+			CheckDiff(null);
 		}
 
 		public async void CheckDiff(object sender)
@@ -222,7 +240,7 @@ namespace GitView
 				{
 					nIcon.Icon = SProperties.Resources.title;
 				}
-				nIcon.Text = $"Подключён: {_name.Text}, Изменений: {count}";
+				nIcon.Text = $"Подключён: {_name.Text}, изменений: {count}";
 			}
 			catch(Exception exc)
 			{

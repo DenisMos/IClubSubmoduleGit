@@ -51,7 +51,7 @@ namespace GitView
 
 			Log.Message(handler.Start(GitAPI.Commit()));
 
-			var message = await handler.StartAsync(GitAPI.Push(name));
+			var message = await handler.StartAsync(GitAPI.Push(name), true);
 			if(message.Contains("->"))
 			{
 				Log.MessageCompleted($"Ветка '{name}' обновлена");
@@ -69,7 +69,7 @@ namespace GitView
 			var handler = new WrapperGit();
 
 			Log.Message($"Клонирование репозитория");
-			await handler.StartAsync(GitAPI.Clone(url));
+			await handler.StartAsync(GitAPI.Clone(url), true);
 
 			var urlw = System.IO.Path.GetFileNameWithoutExtension(url);
 
@@ -79,7 +79,7 @@ namespace GitView
 			{
 				Log.Message($"Обновление ветки");
 
-				await handler.StartAsync(GitAPI.Fetch());
+				await handler.StartAsync(GitAPI.Fetch(), true);
 			}
 
 			var responceCheck = await handler.StartAsync(GitAPI.CheckoutRemout(name));

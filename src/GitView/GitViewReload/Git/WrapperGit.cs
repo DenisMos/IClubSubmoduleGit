@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Documents;
 
 namespace GitView.Git
@@ -24,6 +25,18 @@ namespace GitView.Git
 			StartInfo.RedirectStandardError = true;
 			StartInfo.CreateNoWindow = true;
 			StartInfo.FileName = "git";
+
+			App.Current.Exit += OnExit;
+		}
+
+		private void OnExit(object sender, ExitEventArgs e)
+		{
+			if(!Process.HasExited)
+			{
+				Process.Kill();
+			}
+			Process.Close();
+			Process.Dispose();
 		}
 
 		public void SetDirect(string path)
@@ -31,10 +44,46 @@ namespace GitView.Git
 			StartInfo.WorkingDirectory = path;
 		}
 
-		public async Task<string> StartAsync(string command)
+		public async Task<string> StartAsync(string command, bool check = false)
 		{
 			SetArgs(command);
-			return await Task.Run(() => Start(command));
+			if(check)
+			{
+				StartInfo.CreateNoWindow = false;
+				StartInfo.RedirectStandardOutput = false;
+				StartInfo.RedirectStandardError = false;
+			}
+			try
+			{
+				var d = await Task.Run(() => Start(command));
+				return d;
+			}
+			catch (Exception exc)
+			{
+				return exc.Message;
+			}
+			finally
+			{
+				if(check)
+				{
+					StartInfo.CreateNoWindow = true;
+					StartInfo.RedirectStandardOutput = true;
+				}
+			}
+		}
+
+		public string Start(string command, string name)
+		{
+			SetArgs(string.Empty);
+			var cache = StartInfo.FileName;
+
+			StartInfo.FileName = name;
+
+			var resp = Start();
+
+			StartInfo.FileName = cache;
+
+			return resp;
 		}
 
 		public string Start(string command)
