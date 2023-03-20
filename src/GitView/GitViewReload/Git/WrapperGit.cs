@@ -8,10 +8,17 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Documents;
 
+using System.Runtime.InteropServices;
+using System.Threading;
+
 namespace GitView.Git
 {
 	public class WrapperGit : IDisposable
 	{
+		[DllImport("kernel32.dll", SetLastError = true)]
+		private static extern bool AttachConsole(uint dwProcessId);
+
+
 		private Process Process { get; }
 
 		public ProcessStartInfo StartInfo { get; }
@@ -44,6 +51,32 @@ namespace GitView.Git
 			StartInfo.WorkingDirectory = path;
 		}
 
+		public async Task StartProcessing(string command, ContextCallback asyncCallback)
+		{
+			SetArgs(command);
+			await Task.Run(() =>
+			{
+				Process.Start();
+
+				while(!Process.StandardOutput.EndOfStream || !Process.StandardError.EndOfStream)
+				{
+					var data1 = Process.StandardOutput.ReadLine();
+					var data2 = Process.StandardError.ReadLine();
+					if(string.IsNullOrEmpty(data1))
+					{
+						asyncCallback.Invoke(data2);
+					}
+					else if(string.IsNullOrEmpty(data2))
+					{
+						asyncCallback.Invoke(data1);
+					}
+					
+				}
+
+				Process.WaitForExit();
+			});
+		}
+
 		public async Task<string> StartAsync(string command, bool check = false)
 		{
 			SetArgs(command);
@@ -55,8 +88,15 @@ namespace GitView.Git
 			}
 			try
 			{
-				var d = await Task.Run(() => Start(command));
-				return d;
+				var d = await Task.Run(() => Start(command, check)).ConfigureAwait(false);
+				if(!check)
+				{
+					return d;
+				}
+				else
+				{
+					return "Смотрите данные в консоли";
+				}
 			}
 			catch (Exception exc)
 			{
@@ -68,6 +108,7 @@ namespace GitView.Git
 				{
 					StartInfo.CreateNoWindow = true;
 					StartInfo.RedirectStandardOutput = true;
+					StartInfo.RedirectStandardError = true;
 				}
 			}
 		}
@@ -86,10 +127,10 @@ namespace GitView.Git
 			return resp;
 		}
 
-		public string Start(string command)
+		public string Start(string command, bool check = false)
 		{
 			SetArgs(command);
-			return Start();
+			return Start(check);
 		}
 
 		public async Task StartAsync()
@@ -104,24 +145,30 @@ namespace GitView.Git
 
 		public bool IsExeption { get; private set; }
 
-		public string Start()
+		public string Start(bool check = false)
 		{
 			Process.Start();
-
 			Process.WaitForExit();
 
-			var message = Process.StandardOutput.ReadToEnd();
-			if(string.IsNullOrEmpty(message))
+			if(!check)
 			{
-				IsExeption = true;
-				message = Process.StandardError.ReadToEnd();
+				var message = Process.StandardOutput.ReadToEnd();
+				if(string.IsNullOrEmpty(message))
+				{
+					IsExeption = true;
+					message = Process.StandardError.ReadToEnd();
+				}
+				else
+				{
+					IsExeption = false;
+				}
+
+				return message + Process.StandardError.ReadToEnd();
 			}
 			else
 			{
-				IsExeption = false;
+				return string.Empty;
 			}
-
-			return message + Process.StandardError.ReadToEnd();
 		}
 
 		public string GetError()

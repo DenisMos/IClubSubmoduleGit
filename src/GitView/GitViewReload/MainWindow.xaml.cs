@@ -186,11 +186,13 @@ namespace GitView
 
 				var count = 0;
 
-				var diff = await wrapper.StartAsync(GitAPI.Untracked);
-				count += AddRows("Новые объекты:", diff, Brushes.MediumPurple);
+				var list = new List<string>();
+				await wrapper.StartProcessing(GitAPI.Untracked, (object obj) => list.Add(obj.ToString()));
+				count += AddRows("Новые объекты:", list.ToArray(), Brushes.MediumPurple);
 
-				var unstage = await wrapper.StartAsync(GitAPI.Unstage);
-				count += AddRows("Изменённые объекты:", unstage, Brushes.DarkCyan);
+				var listU = new List<string>();
+				await wrapper.StartProcessing(GitAPI.Unstage, (object obj) => listU.Add(obj.ToString()));
+				count += AddRows("Изменённые объекты:", listU.ToArray(), Brushes.DarkCyan);
 
 				switch(count)
 				{
@@ -260,9 +262,9 @@ namespace GitView
 			return image;
 		}
 
-		private int AddRows(string group_name, string data, SolidColorBrush brush)
+		private int AddRows(string group_name, string[] data, SolidColorBrush brush)
 		{
-			var rows = data.Split('\n');
+			var rows = data;
 			if(rows.Length > 0)
 			{
 				_model.Items.Add(new Log.LogCollection.LogElement(group_name, brush));
@@ -291,7 +293,7 @@ namespace GitView
 			{
 				Send.IsEnabled = false;
 
-				await _model.Push(_name.Text);
+				await _model.Push(_name.Text, _url.Text);
 
 				CheckDiff(null);
 			}

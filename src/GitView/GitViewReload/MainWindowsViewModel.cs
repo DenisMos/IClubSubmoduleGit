@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using static GitView.Log.LogCollection;
+using static System.Windows.Forms.AxHost;
 
 namespace GitView
 {
@@ -43,24 +44,28 @@ namespace GitView
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		public async Task Push(string name)
+		public async Task Push(string name, string url)
 		{ 
 			var handler = new WrapperGit();
-			handler.SetDirect(Environment.CurrentDirectory + "\\" + "IClubRepositoryForUnity");
+			var urlw = System.IO.Path.GetFileNameWithoutExtension(url);
+			handler.SetDirect(Environment.CurrentDirectory + "\\" + urlw);
 
-			await handler.StartAsync(GitAPI.CommitAdd());
+			Log.Message(await handler.StartAsync(GitAPI.CommitAdd()));
 
 			Log.Message(handler.Start(GitAPI.Commit()));
 
-			var message = await handler.StartAsync(GitAPI.Push(name), true);
-			if(message.Contains("->"))
+			var list = new List<string>();
+			await handler.StartProcessing(GitAPI.Push(name), (object obj)=>list.Add(obj.ToString()));
+
+			foreach(var item in list)
 			{
-				Log.MessageCompleted($"Ветка '{name}' обновлена");
+				Log.Message($"{nameof(Push)}: {item}");
 			}
-			else
-			{
-				Log.MessageError(message);
-			}
+		}
+
+		public void OnCallback(object state)
+		{
+			Log.Message($"{nameof(Push)}: {state}");
 		}
 
 		public async Task<bool> Connect(string name, string pass, string url)
