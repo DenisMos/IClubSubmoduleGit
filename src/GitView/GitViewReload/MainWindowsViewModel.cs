@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -19,7 +20,7 @@ namespace GitView
 {
 	public class MainWindowsViewModel : INotifyPropertyChanged
 	{
-		public BitmapImage Image { get; private set; }
+		public BitmapSource Image { get; private set; }
 
 		public ObservableCollection<LogElement> Items { get; }
 
@@ -111,7 +112,7 @@ namespace GitView
 				}
 			}
 
-			var path = @"IClubRepositoryForUnity/Title.jpg";
+			var path = $@"{handler.StartInfo.WorkingDirectory}/Title.jpg";
 
 			if(File.Exists(path))
 			{

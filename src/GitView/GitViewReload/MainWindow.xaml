@@ -9,10 +9,8 @@
 
     <Window.Background>
         <ImageBrush ImageSource="{Binding Image}"
-        Viewport="0,0,300,300"
-        ViewportUnits="Absolute"
         TileMode="Tile"
-        Stretch="None"
+        Stretch="Fill"
         AlignmentX="Left"
         AlignmentY="Top"  />
     </Window.Background>
